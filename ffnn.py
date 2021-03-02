@@ -171,10 +171,22 @@ class Graph:
         for i in range(2, depth+1):
             for item in self.get_vertices_at(i):
                 self.sigmoid_func(item)
-
-        print(i)    
+ 
         y_value = self.get_vertices_at(i)[0].value
         return y_value
+
+    def predict_ff_many(self, instances):
+        predictions = []
+        leaf_vertex = self.get_vertices_at(1)
+
+        for item in instances:
+            for i in range(len(leaf_vertex)):
+                leaf_vertex[i].set_value(item[i])
+            
+            predict = self.predict_ff()
+            predictions.append(predict)
+
+        return predictions
 
 if __name__ == '__main__':
     F=Graph([], [], 0)
@@ -216,8 +228,14 @@ if __name__ == '__main__':
     F.print_graph()
     F.sigmoid_func(h2)
     print(h2.value)
+
+
    
     print(F.predict_ff())
     F.print_sigmoid_func(h1)
     F.print_sigmoid_func(h2)
     F.print_sigmoid_func(y)
+
+    arr = [[1,0,0], [1,0,1], [1,1,0], [1,1,1]]
+
+    print(F.predict_ff_many(arr))
