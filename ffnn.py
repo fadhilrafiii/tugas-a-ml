@@ -1,3 +1,5 @@
+from math import exp
+
 class Vertex:
     def __init__(self, label, depth, value):
         self.label = label
@@ -148,10 +150,13 @@ class Graph:
 
     ############# FREE FORWARD ##############
     def sign(self, value):
-        if (value <= 0):
+        if (value <= 0.5):
             return 0
         else:
             return 1
+
+    def sigmoid(self, value):
+        return 1/(1 + exp(-1*value))
 
     def sigmoid_func(self, vertex):
         value = 0
@@ -162,8 +167,9 @@ class Graph:
             for i in range(len(children)):
                 value += children[i]*edge[i]
 
-            value = self.sign(value)
+            value = self.sign(self.sigmoid(value))
             vertex.set_value(value)
+            print("this is {} sigma: {}".format(vertex.label, vertex.value))
     
     def predict_ff(self):
         depth = self.get_depth()
@@ -239,3 +245,5 @@ if __name__ == '__main__':
     arr = [[1,0,0], [1,0,1], [1,1,0], [1,1,1]]
 
     print(F.predict_ff_many(arr))
+
+    print(exp(0))
