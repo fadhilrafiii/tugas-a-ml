@@ -88,6 +88,13 @@ class Graph:
 
         return edge
 
+    def get_count_vertices_at(self,depth):
+        count = 0
+        for item in self.V:
+            if item.depth == depth:
+                count+=1
+        return count
+
     ############# ADD ##############
     def add_new_vertex(self, vertex_1):
         if (self.is_vertex_exist(vertex_1)):
@@ -193,8 +200,113 @@ class Graph:
             predictions.append(predict)
 
         return predictions
+    
+    ########## ReLU & Linear ##########
+
+    def print_function(self,vertex):
+        formula =  str(vertex.label) + " = "
+        children = self.get_children_label(vertex)
+        edge = self.get_connected_edge_value(vertex)
+
+        if(len(children)):
+            for i in range(len(children)):
+                if(i==0):
+                    formula += str(edge[i]) + children[i]
+                else:
+                    if(edge[i]>1):
+                        formula += " + " + str(edge[i]) + children[i]
+                    elif(edge[i]>0):
+                        formula += " + " + children[i]
+                    elif(edge[i]==0):
+                        pass
+                    elif(edge[i]<-1):
+                        formula += " - " + str(abs(edge[i])) + children[i]
+                    elif(edge[i]<0):
+                        formula += " - " + children[i]
+
+        print(formula)
+
+
+    def count_function(self,vertex):
+        result = 0
+        children = self.get_children_value(vertex)
+        edge = self.get_connected_edge_value(vertex)
+        
+        for i in range(len(edge)):
+            result+= children[i]*edge[i]
+        # vertex.set_value(result)
+        
+        return result
+        
+
+    def relu(self, vertex):
+        value = self.count_function(vertex)
+        print("RelU(" + str(value)+") = ",end="")
+        if(value>=0):
+            vertex.set_value(value)
+            
+            print(value)
+        else:
+            vertex.set_value(0)
+            print(0)
+
+    def linear(self,vertex):
+
+        value = self.count_function(vertex)
+        vertex.set_value(value)
+        print("Linear(" + str(value)+") = ",end="")
+        print(value)
+        return value
+
+
+    def predict_relu(self,instance):
+        predictions = []
+
+        leaf = self.get_vertices_at(1)
+    
+        for i in range(self.get_count_vertices_at(1)-1):
+            # print(i)
+            leaf[i+1].set_value(instance[i])
+        
+        edge = self.get_vertices_at(2)
+        for e in range(len(edge)):
+            if(e!=0):
+                self.relu(edge[e])
+                
+        result = self.linear(y)
+
+        
+
+        return result
+
+    
+    
+    def predict_relu_many(self,instances):
+        predictions = []
+
+
+        for instance in instances:
+            print("---------------------")
+            result = self.predict_relu(instance)
+            predictions.append(result)
+
+        # print()
+        # print("Hasil ReLU")
+        # print(predictions)
+
+        return predictions
+
+
+
+
+
+    
+
 
 if __name__ == '__main__':
+
+    ########## Tester for Sigmoid ##########
+    """
     F=Graph([], [], 0)
 
 
@@ -247,3 +359,55 @@ if __name__ == '__main__':
     print(F.predict_ff_many(arr))
 
     print(exp(0))
+    F.print_graph()"""
+
+    
+     ########## Tester for ReLU and Linear ##########
+
+    F=Graph([],[],0)
+
+    #Vertex with depth 1
+    x0 = Vertex("xO",1,1)
+    x1 = Vertex("x1",1,None)
+    x2 = Vertex("x2",1,None)
+
+    #Vertex with depth 2
+    h0 = Vertex("h0",2,1)
+    h1 = Vertex("h1",2,None)
+    h2 = Vertex("h2",2,None)
+
+    #Vertex with depth 3
+    y = Vertex("y",3,None)
+
+    #Add Vertices
+    F.add_new_vertex(x0)
+    F.add_new_vertex(x1)
+    F.add_new_vertex(x2)
+    F.add_new_vertex(h0)
+    F.add_new_vertex(h1)
+    F.add_new_vertex(h2)
+    F.add_new_vertex(y)
+
+    #Add Edges
+    F.add_new_edge(x0,h1,0)
+    F.add_new_edge(x1,h1,1)
+    F.add_new_edge(x2,h1,1)
+    F.add_new_edge(x0,h2,-1)
+    F.add_new_edge(x1,h2,1)
+    F.add_new_edge(x2,h2,1)
+    F.add_new_edge(h0,y,0)
+    F.add_new_edge(h1,y,1)
+    F.add_new_edge(h2,y,-2)
+
+    F.print_function(h1)
+    F.print_function(h2)
+    F.print_function(y)
+
+    instances=[[0,0],[0,1],[1,0],[1,1]]
+    hasil = F.predict_relu_many(instances)
+    print(hasil)
+
+    instance = [2,1]
+    hasil = F.predict_relu(instance)
+    print(hasil)
+
