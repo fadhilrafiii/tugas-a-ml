@@ -256,7 +256,7 @@ class Graph:
         vertex.set_value(value)
         print("Linear(" + str(value)+") = ",end="")
         print(value)
-        return value
+        return value   
 
 
     def predict_relu(self,instance):
@@ -297,9 +297,62 @@ class Graph:
         return predictions
 
 
+    ######## Softmax #########
+    
+    def count_z(self, vertex):
+        children = self.get_children_value(vertex)
+        edges = self.get_connected_edge_value(vertex)
+        
+        z = 0
+        
+        for i in range(len(children)):
+            z += children[i]*edges[i]
+            vertex.set_value(z)
+            
+        return z
+    
+    
+    def softmax(self, vertex):
+        nodes_on_n_depth = self.get_vertices_at(vertex.depth)
+        sum_of_exp_z = 0
+        for node in nodes_on_n_depth:
+            sum_of_exp_z += exp(node.value)
+        
+        prediction = exp(vertex.value)/sum_of_exp_z
+        # print("Softmax(",vertex.label,") = ", prediction)
+        
+        return prediction
+    
+    def predict_softmax(self, instance):
+        predictions = []
+        predict = 0
+        leaf = self.get_vertices_at(1)
+        
+        for i in range(len(leaf)-1):
+            leaf[i+1].set_value(instance[i])
+        
+            
+        stem = self.get_vertices_at(2)
+        for j in range(len(stem)):
+            stem[j].set_value(self.count_z(stem[j]))
+        
+        for s in stem:
+            predict = self.softmax(s)
+            predictions.append(predict)
 
-
-
+        return predictions
+    
+    
+    def predict_softmax_many(self, instances):
+        predictions = []
+        
+        for instance in instances:
+            result = self.predict_softmax(instance)
+            predictions.append(result)
+            
+        return predictions
+    
+    
     
 
 
@@ -363,7 +416,7 @@ if __name__ == '__main__':
 
     
      ########## Tester for ReLU and Linear ##########
-
+    
     F=Graph([],[],0)
 
     #Vertex with depth 1
@@ -410,4 +463,42 @@ if __name__ == '__main__':
     instance = [2,1]
     hasil = F.predict_relu(instance)
     print(hasil)
+    
+    
 
+    ########## Tester for Softmax ##########
+    
+    F=Graph([],[],0)
+
+    #Vertex with depth 1
+    x0 = Vertex("xO",1,1)
+    x1 = Vertex("x1",1,None)
+    x2 = Vertex("x2",1,None)
+
+    #Vertex with depth 2
+    z1 = Vertex("z1",2,None)
+    z2 = Vertex("z2",2,None)
+
+    #Add Vertices
+    F.add_new_vertex(x0)
+    F.add_new_vertex(x1)
+    F.add_new_vertex(x2)
+    F.add_new_vertex(z1)
+    F.add_new_vertex(z2)
+
+    #Add Edges
+    F.add_new_edge(x0,z1,0)
+    F.add_new_edge(x1,z1,1)
+    F.add_new_edge(x2,z1,1)
+    F.add_new_edge(x0,z2,-1)
+    F.add_new_edge(x1,z2,1)
+    F.add_new_edge(x2,z2,1)
+    
+    hasil = F.predict_softmax([1,1])
+    print(hasil)
+    
+    
+    hasil = F.predict_softmax_many([[1,1], [1,0], [0,1], [0,0]])
+    print(hasil)
+    
+    
