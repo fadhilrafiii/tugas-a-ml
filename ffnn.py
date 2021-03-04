@@ -1,4 +1,5 @@
 from math import exp
+import numpy as np
 
 class Vertex:
     def __init__(self, label, depth, value):
@@ -100,8 +101,8 @@ class Graph:
         if (self.is_vertex_exist(vertex_1)):
             print("Vertex is already exist!")
         else:
+            print("Vertex added")
             self.V.append(vertex_1)
-
     # vertex_1 is a vertex which exists in the graph
     # vertex_2 is a vertex which is going to be added
     # edge_value is the value of edge connecting vertex_1 and vertex_2
@@ -119,7 +120,7 @@ class Graph:
     ############# PRINT ##############
     def print_all_vertices(self):
         print("These are existing vertices: ")
-
+        print(self.depth)
         for i in range(1, self.depth+1):
             print("Depth", i)
             for item in self.V:
@@ -305,109 +306,205 @@ class Graph:
 
 if __name__ == '__main__':
 
+    ########## READ TXT INPUT ##########
+    input_data = "./data_input.txt"
+
+    with open(input_data, "r") as data:
+        FileContent = data.read()
+    txt_arr = np.loadtxt(input_data, delimiter='\n', dtype=str)
+
+    # get instances
+    splitted = txt_arr[0].split()
+    instance1 = [int(l) for l in splitted]
+    splitted = txt_arr[1].split()
+    instance2 = [int(l) for l in splitted]
+    splitted = txt_arr[2].split()
+    instance3 = [int(l) for l in splitted]
+    splitted = txt_arr[3].split()
+    instance4 = [int(l) for l in splitted]
+    # get num of layer
+    n_layer = int(txt_arr[4])
+    # get num of neuron per layer
+    splitted1 = txt_arr[5].split()
+    n_neuron = [int(j) for j in splitted1]
+    # get weight
+    weight = []
+    now=6
+    for j in range(n_layer-1):
+        weight.append([])
+        for k in range(n_neuron[j]+1):
+            weight[j].append([])
+            for l in range(n_neuron[j+1]):
+                splitted = txt_arr[now].split()
+                tmp = [int(l) for l in splitted]
+                weight[j][k].append(tmp[l])
+            now+=1
+    print(instance1)
+    print(instance2)
+    print(instance3)
+    print(instance4)
+    instance = []
+    instance.append(instance1)
+    instance.append(instance2)
+    instance.append(instance3)
+    instance.append(instance4)
+    print(n_layer)
+    print(n_neuron)
+    print(weight)
+
+    ########## CREATE GRAPH ##########
+    F = Graph([], [], n_layer)
+    vertices = []
+    for i in range(n_layer-1):
+        if(i==0):
+            depan="x"
+        elif(i==n_layer-1):
+            depan="y"
+        else:
+            depan="h"
+        for j in range(n_neuron[i]+1):
+            nama = depan+str(j)
+            print(nama, i+1, 1)
+            tmp = Vertex(nama, i+1, 1)
+            ver = (nama, tmp)
+            vertices.append(ver)
+            F.add_new_vertex(tmp)
+    tmp = Vertex("y", n_layer, 1)
+    ver = ("y", tmp)
+    vertices.append(ver)
+    print(vertices[0])
+    F.add_new_vertex(tmp)
+    F.print_all_vertices()
+
+    for i in range(n_layer-1):
+        for j in range(n_neuron[i]+1):
+            for k in range(n_neuron[i+1]):
+                if(i==0):
+                    headfrom="x"
+                    headto="h"
+                elif(i==n_layer-2):
+                    headfrom="h"
+                    headto="y"
+                else:
+                    headfrom="h"
+                    headto="h"
+                nama1 = headfrom+str(j)
+                if(headto!="y"):
+                    nama2 = headto+str(k)
+                else:
+                    nama2 = headto
+                for v in range(len(vertices)):
+                    if(vertices[v][0]==nama1):
+                        v1 = vertices[v][1]
+                    elif(vertices[v][0]==nama2):
+                        v2 = vertices[v][1]
+                F.add_new_edge(v1, v2, weight[i][j][k])
+                
+                
+
     ########## Tester for Sigmoid ##########
-    """
-    F=Graph([], [], 0)
+    
+    # F=Graph([], [], 0)
 
 
-    # Vertex with depth 1
-    x0=Vertex("x0", 1, 1)
-    x1=Vertex("x1", 1, 1)
-    x2=Vertex("x2", 1, 1)
+    # # Vertex with depth 1
+    # x0=Vertex("x0", 1, 1)
+    # x1=Vertex("x1", 1, 1)
+    # x2=Vertex("x2", 1, 1)
 
-    # Vertex with depth 2
-    h0=Vertex("h0", 2, 1)
-    h1=Vertex("h1", 2, None)
-    h2=Vertex("h2", 2, None)
+    # # Vertex with depth 2
+    # h0=Vertex("h0", 2, 1)
+    # h1=Vertex("h1", 2, None)
+    # h2=Vertex("h2", 2, None)
 
-    # Vertex with depth 3
-    y=Vertex("y", 3, None)
+    # # Vertex with depth 3
+    # y=Vertex("y", 3, None)
 
-    # Add Vertices
-    F.add_new_vertex(x0)
-    F.add_new_vertex(x1)
-    F.add_new_vertex(x2)
-    F.add_new_vertex(h0)
-    F.add_new_vertex(h1)
-    F.add_new_vertex(h2)
-    F.add_new_vertex(y)
+    # # Add Vertices
+    # F.add_new_vertex(x0)
+    # F.add_new_vertex(x1)
+    # F.add_new_vertex(x2)
+    # F.add_new_vertex(h0)
+    # F.add_new_vertex(h1)
+    # F.add_new_vertex(h2)
+    # F.add_new_vertex(y)
 
-    # Add Edges
-    F.add_new_edge(x0, h1, -10)
-    F.add_new_edge(x0, h2, 30)
-    F.add_new_edge(x1, h1, 20)
-    F.add_new_edge(x1, h2, -20)
-    F.add_new_edge(x2, h1, 20)
-    F.add_new_edge(x2, h2, -20)
-    F.add_new_edge(h0, y, -30)
-    F.add_new_edge(h1, y, 20)
-    F.add_new_edge(h2, y, 20)
+    # # Add Edges
+    # F.add_new_edge(x0, h1, -10)
+    # F.add_new_edge(x0, h2, 30)
+    # F.add_new_edge(x1, h1, 20)
+    # F.add_new_edge(x1, h2, -20)
+    # F.add_new_edge(x2, h1, 20)
+    # F.add_new_edge(x2, h2, -20)
+    # F.add_new_edge(h0, y, -30)
+    # F.add_new_edge(h1, y, 20)
+    # F.add_new_edge(h2, y, 20)
 
-    F.print_graph()
-    F.sigmoid_func(h2)
-    print(h2.value)
+    # F.print_graph()
+    # F.sigmoid_func(h2)
+    # print(h2.value)
 
 
    
-    print(F.predict_ff())
-    F.print_sigmoid_func(h1)
-    F.print_sigmoid_func(h2)
-    F.print_sigmoid_func(y)
+    # print(F.predict_ff())
+    # F.print_sigmoid_func(h1)
+    # F.print_sigmoid_func(h2)
+    # F.print_sigmoid_func(y)
 
-    arr = [[1,0,0], [1,0,1], [1,1,0], [1,1,1]]
+    # arr = [[1,0,0], [1,0,1], [1,1,0], [1,1,1]]
 
-    print(F.predict_ff_many(arr))
+    # print(F.predict_ff_many(instance))
 
-    print(exp(0))
-    F.print_graph()"""
+    # print(exp(0))
+    F.print_graph()
 
     
      ########## Tester for ReLU and Linear ##########
 
-    F=Graph([],[],0)
+    # F=Graph([],[],0)
 
-    #Vertex with depth 1
-    x0 = Vertex("xO",1,1)
-    x1 = Vertex("x1",1,None)
-    x2 = Vertex("x2",1,None)
+    # #Vertex with depth 1
+    # x0 = Vertex("xO",1,1)
+    # x1 = Vertex("x1",1,None)
+    # x2 = Vertex("x2",1,None)
 
-    #Vertex with depth 2
-    h0 = Vertex("h0",2,1)
-    h1 = Vertex("h1",2,None)
-    h2 = Vertex("h2",2,None)
+    # #Vertex with depth 2
+    # h0 = Vertex("h0",2,1)
+    # h1 = Vertex("h1",2,None)
+    # h2 = Vertex("h2",2,None)
 
-    #Vertex with depth 3
-    y = Vertex("y",3,None)
+    # #Vertex with depth 3
+    # y = Vertex("y",3,None)
 
-    #Add Vertices
-    F.add_new_vertex(x0)
-    F.add_new_vertex(x1)
-    F.add_new_vertex(x2)
-    F.add_new_vertex(h0)
-    F.add_new_vertex(h1)
-    F.add_new_vertex(h2)
-    F.add_new_vertex(y)
+    # #Add Vertices
+    # F.add_new_vertex(x0)
+    # F.add_new_vertex(x1)
+    # F.add_new_vertex(x2)
+    # F.add_new_vertex(h0)
+    # F.add_new_vertex(h1)
+    # F.add_new_vertex(h2)
+    # F.add_new_vertex(y)
 
-    #Add Edges
-    F.add_new_edge(x0,h1,0)
-    F.add_new_edge(x1,h1,1)
-    F.add_new_edge(x2,h1,1)
-    F.add_new_edge(x0,h2,-1)
-    F.add_new_edge(x1,h2,1)
-    F.add_new_edge(x2,h2,1)
-    F.add_new_edge(h0,y,0)
-    F.add_new_edge(h1,y,1)
-    F.add_new_edge(h2,y,-2)
+    # #Add Edges
+    # F.add_new_edge(x0,h1,0)
+    # F.add_new_edge(x1,h1,1)
+    # F.add_new_edge(x2,h1,1)
+    # F.add_new_edge(x0,h2,-1)
+    # F.add_new_edge(x1,h2,1)
+    # F.add_new_edge(x2,h2,1)
+    # F.add_new_edge(h0,y,0)
+    # F.add_new_edge(h1,y,1)
+    # F.add_new_edge(h2,y,-2)
 
-    F.print_function(h1)
-    F.print_function(h2)
-    F.print_function(y)
+    # F.print_function(h1)
+    # F.print_function(h2)
+    # F.print_function(y)
 
-    instances=[[0,0],[0,1],[1,0],[1,1]]
-    hasil = F.predict_relu_many(instances)
-    print(hasil)
+    # instances=[[0,0],[0,1],[1,0],[1,1]]
+    # hasil = F.predict_relu_many(instances)
+    # print(hasil)
 
-    instance = [2,1]
-    hasil = F.predict_relu(instance)
-    print(hasil)
+    # instance = [2,1]
+    # hasil = F.predict_relu(instance)
+    # print(hasil)
 
