@@ -1,5 +1,8 @@
 from math import exp
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+
 
 class Vertex:
     def __init__(self, label, depth, value):
@@ -60,7 +63,7 @@ class Graph:
                 children.append(item.pred.value)
 
         return children
-    
+
     def get_children_label(self, vertex):
         children = []
 
@@ -69,7 +72,7 @@ class Graph:
                 children.append(item.pred.label)
 
         return children
-    
+
     def get_vertices_at(self, depth):
         vertices = []
 
@@ -89,11 +92,11 @@ class Graph:
 
         return edge
 
-    def get_count_vertices_at(self,depth):
+    def get_count_vertices_at(self, depth):
         count = 0
         for item in self.V:
             if item.depth == depth:
-                count+=1
+                count += 1
         return count
 
     ############# ADD ##############
@@ -106,6 +109,7 @@ class Graph:
     # vertex_1 is a vertex which exists in the graph
     # vertex_2 is a vertex which is going to be added
     # edge_value is the value of edge connecting vertex_1 and vertex_2
+
     def add_new_edge(self, vertex_1, vertex_2, edge_value):
         if (self.is_vertex_exist(vertex_1) and self.is_vertex_exist(vertex_2)):
             new_edge = Edge(vertex_1, vertex_2, edge_value)
@@ -137,7 +141,7 @@ class Graph:
         print("Current depth:", self.get_depth())
         self.print_all_vertices()
         self.print_all_edges()
-    
+
     def print_sigmoid_func(self, vertex):
         formula = str(vertex.label) + " = "
         children = self.get_children_label(vertex)
@@ -153,7 +157,7 @@ class Graph:
                             formula += " - " + str(abs(edge[i])) + children[i]
                 else:
                     formula += str(edge[i]) + children[i]
-                    
+
         print(formula)
 
     ############# FREE FORWARD ##############
@@ -177,15 +181,14 @@ class Graph:
 
             value = self.sign(self.sigmoid(value))
             vertex.set_value(value)
-            print("this is {} sigma: {}".format(vertex.label, vertex.value))
-    
+
     def predict_ff(self):
         depth = self.get_depth()
 
         for i in range(2, depth+1):
             for item in self.get_vertices_at(i):
                 self.sigmoid_func(item)
- 
+
         y_value = self.get_vertices_at(i)[0].value
         return y_value
 
@@ -196,95 +199,88 @@ class Graph:
         for item in instances:
             for i in range(len(leaf_vertex)):
                 leaf_vertex[i].set_value(item[i])
-            
+
             predict = self.predict_ff()
             predictions.append(predict)
 
         return predictions
-    
+
     ########## ReLU & Linear ##########
 
-    def print_function(self,vertex):
-        formula =  str(vertex.label) + " = "
+    def print_function(self, vertex):
+        formula = str(vertex.label) + " = "
         children = self.get_children_label(vertex)
         edge = self.get_connected_edge_value(vertex)
 
         if(len(children)):
             for i in range(len(children)):
-                if(i==0):
+                if(i == 0):
                     formula += str(edge[i]) + children[i]
                 else:
-                    if(edge[i]>1):
+                    if(edge[i] > 1):
                         formula += " + " + str(edge[i]) + children[i]
-                    elif(edge[i]>0):
+                    elif(edge[i] > 0):
                         formula += " + " + children[i]
-                    elif(edge[i]==0):
+                    elif(edge[i] == 0):
                         pass
-                    elif(edge[i]<-1):
+                    elif(edge[i] < -1):
                         formula += " - " + str(abs(edge[i])) + children[i]
-                    elif(edge[i]<0):
+                    elif(edge[i] < 0):
                         formula += " - " + children[i]
 
         print(formula)
 
-
-    def count_function(self,vertex):
+    def count_function(self, vertex):
         result = 0
         children = self.get_children_value(vertex)
         edge = self.get_connected_edge_value(vertex)
-        
+    
         for i in range(len(edge)):
-            result+= children[i]*edge[i]
+            result += children[i]*edge[i]
         # vertex.set_value(result)
-        
+
         return result
-        
 
     def relu(self, vertex):
         value = self.count_function(vertex)
-        print("RelU(" + str(value)+") = ",end="")
-        if(value>=0):
+        print("RelU(" + str(value)+") = ", end="")
+        if(value >= 0):
             vertex.set_value(value)
-            
+
             print(value)
         else:
             vertex.set_value(0)
             print(0)
 
-    def linear(self,vertex):
+    def linear(self, vertex):
 
         value = self.count_function(vertex)
         vertex.set_value(value)
-        print("Linear(" + str(value)+") = ",end="")
-        print(value)
-        return value   
+        return value
 
-
-    def predict_relu(self,instance):
-        predictions = []
-
+    def predict_relu(self, instance):
         leaf = self.get_vertices_at(1)
-    
-        for i in range(self.get_count_vertices_at(1)-1):
-            # print(i)
-            leaf[i+1].set_value(instance[i])
+        
+        for i in range(self.get_count_vertices_at(1)):
+            leaf[i].set_value(instance[i])
+        
         
         edge = self.get_vertices_at(2)
         for e in range(len(edge)):
             if(e!=0):
+                print(e)
                 self.relu(edge[e])
                 
+        y = self.get_vertices_at(3)[0]
         result = self.linear(y)
 
-        
+        y = self.get_vertices_at(3)[0]
+        result = self.linear(y)
 
         return result
 
-    
-    
-    def predict_relu_many(self,instances):
+    def predict_relu_many(self, instances):
         predictions = []
-
 
         for instance in instances:
             print("---------------------")
@@ -297,64 +293,78 @@ class Graph:
 
         return predictions
 
-
     ######## Softmax #########
-    
+
     def count_z(self, vertex):
         children = self.get_children_value(vertex)
         edges = self.get_connected_edge_value(vertex)
-        
+
         z = 0
-        
+
         for i in range(len(children)):
             z += children[i]*edges[i]
             vertex.set_value(z)
-            
+
         return z
-    
-    
+
     def softmax(self, vertex):
         nodes_on_n_depth = self.get_vertices_at(vertex.depth)
         sum_of_exp_z = 0
         for node in nodes_on_n_depth:
             sum_of_exp_z += exp(node.value)
-        
+
         prediction = exp(vertex.value)/sum_of_exp_z
         # print("Softmax(",vertex.label,") = ", prediction)
-        
+
         return prediction
-    
+
     def predict_softmax(self, instance):
         predictions = []
         predict = 0
         leaf = self.get_vertices_at(1)
-        
+
         for i in range(len(leaf)-1):
             leaf[i+1].set_value(instance[i])
-        
-            
+
         stem = self.get_vertices_at(2)
         for j in range(len(stem)):
             stem[j].set_value(self.count_z(stem[j]))
-        
+
         for s in stem:
             predict = self.softmax(s)
             predictions.append(predict)
 
         return predictions
-    
-    
+
     def predict_softmax_many(self, instances):
         predictions = []
-        
+
         for instance in instances:
             result = self.predict_softmax(instance)
             predictions.append(result)
-            
+
         return predictions
-    
-    
-    
+
+    def visualize_graph(self):
+        G = nx.Graph()
+        print(len(self.V))
+
+        for i in range(1, self.depth+1):
+            vertices = F.get_vertices_at(i)
+
+            for j in range(len(vertices)):
+                G.add_node(vertices[j].label, pos=(j, i))
+
+        for item in self.E:
+            G.add_edge(item.pred.label, item.succ.label, weight=item.value)
+
+        pos = nx.get_node_attributes(G, 'pos')
+        nx.draw(G, pos, with_labels=True, font_size=9)
+
+        labels = nx.get_edge_attributes(G, 'weight')
+        nx.draw_networkx_edge_labels(
+            G, pos, edge_labels=labels, label_pos=0.2, font_size=8)
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -366,23 +376,21 @@ if __name__ == '__main__':
         FileContent = data.read()
     txt_arr = np.loadtxt(input_data, delimiter='\n', dtype=str)
 
-    # get instances
-    splitted = txt_arr[0].split()
-    instance1 = [int(l) for l in splitted]
-    splitted = txt_arr[1].split()
-    instance2 = [int(l) for l in splitted]
-    splitted = txt_arr[2].split()
-    instance3 = [int(l) for l in splitted]
-    splitted = txt_arr[3].split()
-    instance4 = [int(l) for l in splitted]
+    num_of_instances = int(txt_arr[0])
+    instances = []
+    for i in range(1, num_of_instances+1):
+        splitted = txt_arr[i].split()
+        temp = [int(l) for l in splitted]
+        instances.append(temp)
+
     # get num of layer
-    n_layer = int(txt_arr[4])
+    n_layer = int(txt_arr[num_of_instances+1])
     # get num of neuron per layer
-    splitted1 = txt_arr[5].split()
+    splitted1 = txt_arr[num_of_instances+2].split()
     n_neuron = [int(j) for j in splitted1]
     # get weight
     weight = []
-    now=6
+    now = num_of_instances+3
     for j in range(n_layer-1):
         weight.append([])
         for k in range(n_neuron[j]+1):
@@ -391,33 +399,20 @@ if __name__ == '__main__':
                 splitted = txt_arr[now].split()
                 tmp = [int(l) for l in splitted]
                 weight[j][k].append(tmp[l])
-            now+=1
-    print(instance1)
-    print(instance2)
-    print(instance3)
-    print(instance4)
-    instance = []
-    instance.append(instance1)
-    instance.append(instance2)
-    instance.append(instance3)
-    instance.append(instance4)
-    print(n_layer)
-    print(n_neuron)
-    print(weight)
+            now += 1
 
     ########## CREATE GRAPH ##########
     F = Graph([], [], n_layer)
     vertices = []
     for i in range(n_layer-1):
-        if(i==0):
-            depan="x"
-        elif(i==n_layer-1):
-            depan="y"
+        if(i == 0):
+            depan = "x"
+        elif(i == n_layer-1):
+            depan = "y"
         else:
-            depan="h"
+            depan = "h"
         for j in range(n_neuron[i]+1):
             nama = depan+str(j)
-            print(nama, i+1, 1)
             tmp = Vertex(nama, i+1, 1)
             ver = (nama, tmp)
             vertices.append(ver)
@@ -425,77 +420,31 @@ if __name__ == '__main__':
     tmp = Vertex("y", n_layer, 1)
     ver = ("y", tmp)
     vertices.append(ver)
-    print(vertices[0])
     F.add_new_vertex(tmp)
-    F.print_all_vertices()
 
     for i in range(n_layer-1):
         for j in range(n_neuron[i]+1):
             for k in range(n_neuron[i+1]):
-                if(i==0):
-                    headfrom="x"
-                    headto="h"
-                elif(i==n_layer-2):
-                    headfrom="h"
-                    headto="y"
+                if(i == 0):
+                    headfrom = "x"
+                    headto = "h"
+                elif(i == n_layer-2):
+                    headfrom = "h"
+                    headto = "y"
                 else:
-                    headfrom="h"
-                    headto="h"
+                    headfrom = "h"
+                    headto = "h"
                 nama1 = headfrom+str(j)
-                if(headto!="y"):
-                    nama2 = headto+str(k)
+                if(headto != "y"):
+                    nama2 = headto+str(k+1)
                 else:
                     nama2 = headto
                 for v in range(len(vertices)):
-                    if(vertices[v][0]==nama1):
+                    if(vertices[v][0] == nama1):
                         v1 = vertices[v][1]
-                    elif(vertices[v][0]==nama2):
+                    elif(vertices[v][0] == nama2):
                         v2 = vertices[v][1]
                 F.add_new_edge(v1, v2, weight[i][j][k])
-                
-                
-
-    ########## Tester for Sigmoid ##########
-    
-    # F=Graph([], [], 0)
-
-
-    # # Vertex with depth 1
-    # x0=Vertex("x0", 1, 1)
-    # x1=Vertex("x1", 1, 1)
-    # x2=Vertex("x2", 1, 1)
-
-    # # Vertex with depth 2
-    # h0=Vertex("h0", 2, 1)
-    # h1=Vertex("h1", 2, None)
-    # h2=Vertex("h2", 2, None)
-
-    # # Vertex with depth 3
-    # y=Vertex("y", 3, None)
-
-    # # Add Vertices
-    # F.add_new_vertex(x0)
-    # F.add_new_vertex(x1)
-    # F.add_new_vertex(x2)
-    # F.add_new_vertex(h0)
-    # F.add_new_vertex(h1)
-    # F.add_new_vertex(h2)
-    # F.add_new_vertex(y)
-
-    # # Add Edges
-    # F.add_new_edge(x0, h1, -10)
-    # F.add_new_edge(x0, h2, 30)
-    # F.add_new_edge(x1, h1, 20)
-    # F.add_new_edge(x1, h2, -20)
-    # F.add_new_edge(x2, h1, 20)
-    # F.add_new_edge(x2, h2, -20)
-    # F.add_new_edge(h0, y, -30)
-    # F.add_new_edge(h1, y, 20)
-    # F.add_new_edge(h2, y, 20)
-
-    # F.print_graph()
-    # F.sigmoid_func(h2)
-    # print(h2.value)
 
 
    
@@ -564,7 +513,7 @@ if __name__ == '__main__':
     
     '''
     ########## Tester for Softmax ##########
-    '''
+    
     F=Graph([],[],0)
 
     #Vertex with depth 1
@@ -595,7 +544,14 @@ if __name__ == '__main__':
     print(hasil)
     
     
-    hasil = F.predict_softmax_many([[1,1], [1,0], [0,1], [0,0]])
+    hasil = F.predict_softmax_many([[13,21], [31,1], [5,3]])
     print(hasil)
-    '''
+    
+    
+    
+    F.visualize_graph()
+    print(F.predict_ff_many(instances))
+    print(F.predict_relu_many(instances))
+    print(F.predict_softmax_many(instances))
+
     
