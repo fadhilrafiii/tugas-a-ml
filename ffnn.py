@@ -181,7 +181,6 @@ class Graph:
 
             value = self.sign(self.sigmoid(value))
             vertex.set_value(value)
-            print("this is {} sigma: {}".format(vertex.label, vertex.value))
 
     def predict_ff(self):
         depth = self.get_depth()
@@ -257,13 +256,9 @@ class Graph:
 
         value = self.count_function(vertex)
         vertex.set_value(value)
-        print("Linear(" + str(value)+") = ", end="")
-        print(value)
         return value
 
     def predict_relu(self, instance):
-        predictions = []
-
         leaf = self.get_vertices_at(1)
         
         for i in range(self.get_count_vertices_at(1)):
@@ -361,7 +356,6 @@ class Graph:
                 G.add_node(vertices[j].label, pos=(j, i))
 
         for item in self.E:
-            print(item.pred.label, item.succ.label, item.value)
             G.add_edge(item.pred.label, item.succ.label, weight=item.value)
 
         pos = nx.get_node_attributes(G, 'pos')
@@ -385,7 +379,7 @@ if __name__ == '__main__':
     num_of_instances = int(txt_arr[0])
     instances = []
     for i in range(1, num_of_instances+1):
-        splitted = txt_arr[0].split()
+        splitted = txt_arr[i].split()
         temp = [int(l) for l in splitted]
         instances.append(temp)
 
@@ -419,7 +413,6 @@ if __name__ == '__main__':
             depan = "h"
         for j in range(n_neuron[i]+1):
             nama = depan+str(j)
-            print(nama, i+1, 1)
             tmp = Vertex(nama, i+1, 1)
             ver = (nama, tmp)
             vertices.append(ver)
@@ -427,9 +420,7 @@ if __name__ == '__main__':
     tmp = Vertex("y", n_layer, 1)
     ver = ("y", tmp)
     vertices.append(ver)
-    print(vertices[0])
     F.add_new_vertex(tmp)
-    F.print_all_vertices()
 
     for i in range(n_layer-1):
         for j in range(n_neuron[i]+1):
@@ -456,90 +447,9 @@ if __name__ == '__main__':
                 F.add_new_edge(v1, v2, weight[i][j][k])
 
     
-     ########## Tester for ReLU and Linear ##########
-    
-    F=Graph([],[],0)
+    F.visualize_graph()
+    print(F.predict_ff_many(instances))
+    print(F.predict_relu_many(instances))
+    print(F.predict_softmax_many(instances))
 
-    #Vertex with depth 1
-    x0 = Vertex("xO",1,None)
-    x1 = Vertex("x1",1,None)
-    x2 = Vertex("x2",1,None)
-
-    #Vertex with depth 2
-    h0 = Vertex("h0",2,1)
-    h1 = Vertex("h1",2,None)
-    h2 = Vertex("h2",2,None)
-
-    #Vertex with depth 3
-    y = Vertex("y",3,None)
-
-    #Add Vertices
-    F.add_new_vertex(x0)
-    F.add_new_vertex(x1)
-    F.add_new_vertex(x2)
-    F.add_new_vertex(h0)
-    F.add_new_vertex(h1)
-    F.add_new_vertex(h2)
-    F.add_new_vertex(y)
-
-    #Add Edges
-    F.add_new_edge(x0,h1,0)
-    F.add_new_edge(x1,h1,1)
-    F.add_new_edge(x2,h1,1)
-    F.add_new_edge(x0,h2,-1)
-    F.add_new_edge(x1,h2,1)
-    F.add_new_edge(x2,h2,1)
-    F.add_new_edge(h0,y,0)
-    F.add_new_edge(h1,y,1)
-    F.add_new_edge(h2,y,-2)
-
-    F.print_function(h1)
-    F.print_function(h2)
-    F.print_function(y)
-
-    instances=[[1,0,0],[1,0,1],[1,1,0],[1,1,1]]
-    hasil = F.predict_relu_many(instances)
-    print(hasil)
-
-    instance = [1,2,1]
-    hasil = F.predict_relu(instance)
-    print(hasil)
-    
-    
-
-    # ########## Tester for Softmax ##########
-    
-    # F=Graph([],[],0)
-
-    # #Vertex with depth 1
-    # x0 = Vertex("xO",1,1)
-    # x1 = Vertex("x1",1,None)
-    # x2 = Vertex("x2",1,None)
-
-    # #Vertex with depth 2
-    # z1 = Vertex("z1",2,None)
-    # z2 = Vertex("z2",2,None)
-
-    # #Add Vertices
-    # F.add_new_vertex(x0)
-    # F.add_new_vertex(x1)
-    # F.add_new_vertex(x2)
-    # F.add_new_vertex(z1)
-    # F.add_new_vertex(z2)
-
-    # #Add Edges
-    # F.add_new_edge(x0,z1,0)
-    # F.add_new_edge(x1,z1,1)
-    # F.add_new_edge(x2,z1,1)
-    # F.add_new_edge(x0,z2,-1)
-    # F.add_new_edge(x1,z2,1)
-    # F.add_new_edge(x2,z2,1)
-    
-    # hasil = F.predict_softmax([1,1])
-    # print(hasil)
-    
-    
-    # hasil = F.predict_softmax_many([[1,1], [1,0], [0,1], [0,0]])
-    # print(hasil)
-    
     
