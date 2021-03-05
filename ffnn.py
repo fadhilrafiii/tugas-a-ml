@@ -235,7 +235,7 @@ class Graph:
         result = 0
         children = self.get_children_value(vertex)
         edge = self.get_connected_edge_value(vertex)
-
+    
         for i in range(len(edge)):
             result += children[i]*edge[i]
         # vertex.set_value(result)
@@ -265,15 +265,19 @@ class Graph:
         predictions = []
 
         leaf = self.get_vertices_at(1)
-
-        for i in range(self.get_count_vertices_at(1)-1):
-            # print(i)
-            leaf[i+1].set_value(instance[i])
-
+        
+        for i in range(self.get_count_vertices_at(1)):
+            leaf[i].set_value(instance[i])
+        
+        
         edge = self.get_vertices_at(2)
         for e in range(len(edge)):
-            if(e != 0):
+            if(e!=0):
+                print(e)
                 self.relu(edge[e])
+                
+        y = self.get_vertices_at(3)[0]
+        result = self.linear(y)
 
         y = self.get_vertices_at(3)[0]
         result = self.linear(y)
@@ -451,5 +455,91 @@ if __name__ == '__main__':
                         v2 = vertices[v][1]
                 F.add_new_edge(v1, v2, weight[i][j][k])
 
-    F.print_graph()
-    F.visualize_graph()
+    
+     ########## Tester for ReLU and Linear ##########
+    
+    F=Graph([],[],0)
+
+    #Vertex with depth 1
+    x0 = Vertex("xO",1,None)
+    x1 = Vertex("x1",1,None)
+    x2 = Vertex("x2",1,None)
+
+    #Vertex with depth 2
+    h0 = Vertex("h0",2,1)
+    h1 = Vertex("h1",2,None)
+    h2 = Vertex("h2",2,None)
+
+    #Vertex with depth 3
+    y = Vertex("y",3,None)
+
+    #Add Vertices
+    F.add_new_vertex(x0)
+    F.add_new_vertex(x1)
+    F.add_new_vertex(x2)
+    F.add_new_vertex(h0)
+    F.add_new_vertex(h1)
+    F.add_new_vertex(h2)
+    F.add_new_vertex(y)
+
+    #Add Edges
+    F.add_new_edge(x0,h1,0)
+    F.add_new_edge(x1,h1,1)
+    F.add_new_edge(x2,h1,1)
+    F.add_new_edge(x0,h2,-1)
+    F.add_new_edge(x1,h2,1)
+    F.add_new_edge(x2,h2,1)
+    F.add_new_edge(h0,y,0)
+    F.add_new_edge(h1,y,1)
+    F.add_new_edge(h2,y,-2)
+
+    F.print_function(h1)
+    F.print_function(h2)
+    F.print_function(y)
+
+    instances=[[1,0,0],[1,0,1],[1,1,0],[1,1,1]]
+    hasil = F.predict_relu_many(instances)
+    print(hasil)
+
+    instance = [1,2,1]
+    hasil = F.predict_relu(instance)
+    print(hasil)
+    
+    
+
+    # ########## Tester for Softmax ##########
+    
+    # F=Graph([],[],0)
+
+    # #Vertex with depth 1
+    # x0 = Vertex("xO",1,1)
+    # x1 = Vertex("x1",1,None)
+    # x2 = Vertex("x2",1,None)
+
+    # #Vertex with depth 2
+    # z1 = Vertex("z1",2,None)
+    # z2 = Vertex("z2",2,None)
+
+    # #Add Vertices
+    # F.add_new_vertex(x0)
+    # F.add_new_vertex(x1)
+    # F.add_new_vertex(x2)
+    # F.add_new_vertex(z1)
+    # F.add_new_vertex(z2)
+
+    # #Add Edges
+    # F.add_new_edge(x0,z1,0)
+    # F.add_new_edge(x1,z1,1)
+    # F.add_new_edge(x2,z1,1)
+    # F.add_new_edge(x0,z2,-1)
+    # F.add_new_edge(x1,z2,1)
+    # F.add_new_edge(x2,z2,1)
+    
+    # hasil = F.predict_softmax([1,1])
+    # print(hasil)
+    
+    
+    # hasil = F.predict_softmax_many([[1,1], [1,0], [0,1], [0,0]])
+    # print(hasil)
+    
+    
