@@ -513,8 +513,7 @@ if __name__ == '__main__':
 
     
      ########## Tester for ReLU and Linear ##########
-<<<<<<< HEAD
-    
+    '''
     F=Graph([],[],0)
 
     #Vertex with depth 1
@@ -563,64 +562,15 @@ if __name__ == '__main__':
     print(hasil)
     
     
-
+    '''
     ########## Tester for Softmax ##########
-    
+    '''
     F=Graph([],[],0)
 
     #Vertex with depth 1
     x0 = Vertex("xO",1,1)
     x1 = Vertex("x1",1,None)
     x2 = Vertex("x2",1,None)
-=======
-
-    # F=Graph([],[],0)
-
-    # #Vertex with depth 1
-    # x0 = Vertex("xO",1,1)
-    # x1 = Vertex("x1",1,None)
-    # x2 = Vertex("x2",1,None)
-
-    # #Vertex with depth 2
-    # h0 = Vertex("h0",2,1)
-    # h1 = Vertex("h1",2,None)
-    # h2 = Vertex("h2",2,None)
-
-    # #Vertex with depth 3
-    # y = Vertex("y",3,None)
-
-    # #Add Vertices
-    # F.add_new_vertex(x0)
-    # F.add_new_vertex(x1)
-    # F.add_new_vertex(x2)
-    # F.add_new_vertex(h0)
-    # F.add_new_vertex(h1)
-    # F.add_new_vertex(h2)
-    # F.add_new_vertex(y)
-
-    # #Add Edges
-    # F.add_new_edge(x0,h1,0)
-    # F.add_new_edge(x1,h1,1)
-    # F.add_new_edge(x2,h1,1)
-    # F.add_new_edge(x0,h2,-1)
-    # F.add_new_edge(x1,h2,1)
-    # F.add_new_edge(x2,h2,1)
-    # F.add_new_edge(h0,y,0)
-    # F.add_new_edge(h1,y,1)
-    # F.add_new_edge(h2,y,-2)
-
-    # F.print_function(h1)
-    # F.print_function(h2)
-    # F.print_function(y)
-
-    # instances=[[0,0],[0,1],[1,0],[1,1]]
-    # hasil = F.predict_relu_many(instances)
-    # print(hasil)
-
-    # instance = [2,1]
-    # hasil = F.predict_relu(instance)
-    # print(hasil)
->>>>>>> 398dbbb46d2d0d238f2b298504bb4bdd04aa8efd
 
     #Vertex with depth 2
     z1 = Vertex("z1",2,None)
@@ -647,5 +597,5 @@ if __name__ == '__main__':
     
     hasil = F.predict_softmax_many([[1,1], [1,0], [0,1], [0,0]])
     print(hasil)
-    
+    '''
     
