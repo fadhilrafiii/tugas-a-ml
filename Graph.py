@@ -22,21 +22,25 @@ class Vertex:
 
 
 class Edge:
-    def __init__(self, pred_vertex, succ_vertex, edge_value, delta):
+    def __init__(self, pred_vertex, succ_vertex, edge_value, delta, total_delta):
         self.pred = pred_vertex
         self.succ = succ_vertex
         self.value = edge_value
         self.delta = delta
+        self.total_delta = total_delta
 
     def set_value(self, new_value):
         self.value = new_value
 
     def set_delta(self, new_delta):
         self.delta = new_delta
+    
+    def set_total_delta(self, total):
+        self.total_delta = total
 
     def print_edge(self):
-        print("({},{},{}), delta: {}".format(
-            self.pred.label, self.succ.label, self.value, self.delta))
+        print("({},{},{}), delta: {}, total_delta: {}".format(
+            self.pred.label, self.succ.label, self.value, self.delta, self.total_delta))
 
 
 class Graph:
@@ -208,7 +212,7 @@ class Graph:
 
     def add_new_edge(self, vertex_1, vertex_2, edge_value):
         if (self.is_vertex_exist(vertex_1) and self.is_vertex_exist(vertex_2)):
-            new_edge = Edge(vertex_1, vertex_2, edge_value, 0)
+            new_edge = Edge(vertex_1, vertex_2, edge_value, 0, 0)
             self.E.append(new_edge)
 
             if (self.depth < vertex_2.depth):
@@ -289,6 +293,7 @@ class Graph:
     def sigmoid(self, value):
         return 1/(1 + exp(-1*value))
 
+
     def forward_propagation_phase(self, act_func, layer, data, target):
         inputs = self.get_vertices_at(1)
 
@@ -313,81 +318,74 @@ class Graph:
                 vertex.set_value(value)
 
         finished = True
-        output = self.get_output()
 
-        if (self.get_output().value == None):
+        if (layer != self.depth):
             finished = False
         else:
+            output = self.get_output()
             output.set_error(self.get_error_output(target, output.value))
 
         if (not finished and layer < self.depth):
             layer += 1
             return self.forward_propagation_phase(act_func, layer, data, target)
         else:
-            oi = self.get_oi(target, output.value) ** 2
+            oi = self.get_oi(target, output.value) ** 2 
             return oi
 
-    def backward_propagation_phase(self, update, k):
-        print(k)
+    def backward_propagation_phase(self, update):
         for i in range(self.depth-1, 0, -1):
+            print(i)
             edges = self.get_edges_from_to(i)
 
             for edge in edges:
-                if (i == 1):
-                    delta = edge.value * self.learn_rate * edge.succ.error
-                else:
-                    delta = edge.pred.value * self.learn_rate * edge.succ.error
-
+                delta = edge.pred.value * self.learn_rate * edge.succ.error
                 edge.set_delta(delta)
+                edge.set_total_delta(edge.total_delta + delta)
 
                 if (i > 1):
                     err = edge.pred.value * (1 - edge.pred.value) * edge.succ.error * edge.value
                     edge.pred.set_error(err)
 
                 if (update):
-                    print("update")
-                    print(edge.pred.label, edge.succ.label, edge.value, edge.delta)
-                    # harusnya ini tu update weight dari edge nya tu jumlah dari tiap instance dalam tiap update dan tiap instance beda2
-                    # edge.set_value(edge.value + k * edge.delta) harusnya ini tu update weight dari edge nya tu jumlah dari tiap instance dalam tiap update dan tiap instance beda2
-                    print(edge.pred.label, edge.succ.label, edge.value)
-        
-
+                    # print("masuk")
+                    edge.set_value(edge.value + edge.total_delta)
+                    edge.print_edge()
+                    edge.set_total_delta(0)
+            
+                
     def mbgd(self):
         epoch = 1
         counter = 0
-        i = 0  # how much time delta added to next weight
         update = False
         total_err = 0
+        num_instance = 0
 
         data = self.data["data"]
         targets = self.data["target"]
 
-        while (self.error >= self.err_treshold and (epoch <= self.max_iter)):
+        while ((self.error >= self.err_treshold) and (epoch <= self.max_iter)):
             for datum, target in zip(data, targets):
-                print(datum, target)
                 counter += 1
+                num_instance += 1
+
                 if (counter % self.batch_size == 0 or counter % len(data) == 0):
                     update = True
-                    i += 1
+                
+                # print(update)
 
                 if (counter % len(data) == 0):
                     epoch += 1
 
-                print(counter, update, epoch, i)
 
-                err = self.forward_propagation_phase(
-                    self.act_func, 1, datum, target)
+                err = self.forward_propagation_phase(self.act_func, 1, datum, target)
                 total_err += err
-
-                self.backward_propagation_phase(update, sum)
+                self.backward_propagation_phase(update)
 
                 if (update):
                     update = False
-                    i = 0
-                    self.set_error(total_err)
-                    total_err = 0
-                
-                # print(self.error)
+                    self.set_error(total_err/num_instance)
+                    total_err = 0 
+                    num_instance = 0  
 
 
     def forward_propagation_many(self, instances, act_func):
