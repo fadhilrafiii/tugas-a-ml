@@ -5,36 +5,53 @@ import matplotlib.pyplot as plt
 
 
 class Vertex:
-    def __init__(self, label, depth, value):
+    def __init__(self, label, depth, value, error):
         self.label = label
         self.depth = depth
         self.value = value
+        self.error = error
 
     def print_vertex(self):
-        print("{} : {}".format(self.label, self.value))
+        print("{} : {}, err: {}".format(self.label, self.value, self.error))
 
     def set_value(self, new_value):
         self.value = new_value
 
+    def set_error(self, new_error):
+        self.error = new_error
+
 
 class Edge:
-    def __init__(self, pred_vertex, succ_vertex, edge_value):
+    def __init__(self, pred_vertex, succ_vertex, edge_value, delta):
         self.pred = pred_vertex
         self.succ = succ_vertex
         self.value = edge_value
+        self.delta = delta
+
+    def set_value(self, new_value):
+        self.value = new_value
+
+    def set_delta(self, new_delta):
+        self.delta = new_delta
 
     def print_edge(self):
-        print("({},{},{})".format(self.pred.label, self.succ.label, self.value))
+        print("({},{},{}), delta: {}".format(
+            self.pred.label, self.succ.label, self.value, self.delta))
 
 
 class Graph:
-    def __init__(self, V, E, depth, num_of_neuron, learn_rate, act_func):
+    def __init__(self, V, E, depth, num_of_neuron, learn_rate, act_func, err_treshold, max_iter, batch_size, data):
         self.V = V
         self.E = E
         self.depth = depth
         self.learn_rate = learn_rate
         self.num_of_neuron = num_of_neuron
         self.act_func = act_func
+        self.err_treshold = err_treshold
+        self.error = 9999
+        self.max_iter = max_iter
+        self.batch_size = batch_size
+        self.data = data
 
     ############# CHECK ##############
 
@@ -47,7 +64,7 @@ class Graph:
                 return True
 
         return False
-    
+
     def is_bias_or_input(self, vertex):
         if (len(self.get_children_value(vertex)) > 0):
             return False
@@ -91,7 +108,7 @@ class Graph:
                 children.append(item.pred.label)
 
         return children
-    
+
     def get_parent_label(self, vertex):
         parent = []
 
@@ -110,7 +127,16 @@ class Graph:
 
         return vertices
 
+    def get_edges_from_to(self, pred_layer):
+        edges = []
+        for edge in self.E:
+            if (edge.pred.depth == pred_layer and edge.succ.depth == pred_layer+1):
+                edges.append(edge)
+
+        return edges
+
     # Get edge value which connect vertex and its children
+
     def get_connected_edge_value(self, vertex):
         edge = []
 
@@ -127,18 +153,27 @@ class Graph:
                 count += 1
         return count
 
+    def get_output(self):
+        for vertex in self.V:
+            if (vertex.depth == self.depth):
+                return vertex
+
+    def get_oi(self, target, output):
+        return target - output
+
+    def get_error_output(self, target, output):
+        return output * (1 - output) * self.get_oi(target, output)
+
+    ############# SET ###############
+    def set_error(self, error):
+        self.error = error
+
     ############# ADD ##############
     def add_new_vertex(self, vertex_1):
         if (self.is_vertex_exist(vertex_1)):
             print("Vertex is already exist!")
         else:
             self.V.append(vertex_1)
-
-    def get_oi(self, target, output):
-        return target - output
-
-    def get_error_output(self, target, output):
-        return output * (1 - output) * (target - output)
 
     # vertex_1 is a vertex which exists in the graph
     # vertex_2 is a vertex which is going to be added
@@ -149,23 +184,23 @@ class Graph:
             j = 0
 
             if (i == 0):
-                self.add_new_vertex(Vertex("x{}".format(j), i+1, 1))
+                self.add_new_vertex(Vertex("x{}".format(j), i+1, 1, 0))
             elif (i == self.depth-1):
                 pass
             else:
-                self.add_new_vertex(Vertex("h{}{}".format(i, j), i+1, 1))
+                self.add_new_vertex(Vertex("h{}{}".format(i, j), i+1, 0, 0))
 
             while (j < self.num_of_neuron[i]):
                 if (i == 0):
                     self.add_new_vertex(
-                        Vertex("x{}".format(j+1), i+1, vertex_list[j]))
+                        Vertex("x{}".format(j+1), i+1, vertex_list[j], 0))
                 elif (i == self.depth-1):
                     self.add_new_vertex(
-                        Vertex("o{}".format(j+1), i+1, None)
+                        Vertex("o{}".format(j+1), i+1, None, 0)
                     )
                 else:
                     self.add_new_vertex(
-                        Vertex("h{}{}".format(i, j+1), i+1, None))
+                        Vertex("h{}{}".format(i, j+1), i+1, None, 0))
 
                 j += 1
 
@@ -173,7 +208,7 @@ class Graph:
 
     def add_new_edge(self, vertex_1, vertex_2, edge_value):
         if (self.is_vertex_exist(vertex_1) and self.is_vertex_exist(vertex_2)):
-            new_edge = Edge(vertex_1, vertex_2, edge_value)
+            new_edge = Edge(vertex_1, vertex_2, edge_value, 0)
             self.E.append(new_edge)
 
             if (self.depth < vertex_2.depth):
@@ -193,7 +228,7 @@ class Graph:
                     if (second.label[length-1] != "0"):
                         self.add_new_edge(first, second, value)
 
-    def create_graph(self, input, initial_value): 
+    def create_graph(self, input, initial_value):
         self.add_all_vertices(input)
         self.initiate_all_edges(initial_value)
 
@@ -201,10 +236,10 @@ class Graph:
 
     def reset_graph(self):
         for vertex in self.V:
-            if (not self.is_bias_or_input(vertex))  :
+            if (not self.is_bias_or_input(vertex)):
                 vertex.set_value(None)
 
-        return self 
+        return self
     ############# PRINT ##############
 
     def print_all_vertices(self):
@@ -254,11 +289,11 @@ class Graph:
     def sigmoid(self, value):
         return 1/(1 + exp(-1*value))
 
-    def forward_propagation(self, act_func, layer, instance):
+    def forward_propagation_phase(self, act_func, layer, data, target):
         inputs = self.get_vertices_at(1)
 
-        for i in range(len(instance)):
-            inputs[i+1].set_value(instance[i])
+        for i in range(len(data)):
+            inputs[i+1].set_value(data[i])
 
         current_layer = self.get_vertices_at(layer)
         activation = act_func[layer-1]
@@ -271,45 +306,102 @@ class Graph:
 
                 for i in range(len(children)):
                     value = value + children[i]*edge[i]
-                                
+
                 if (activation == "sigmoid"):
                     value = self.sigmoid(value)
-                    
-                vertex.set_value(value)            
+
+                vertex.set_value(value)
 
         finished = True
-        output = self.get_vertices_at(self.depth)
-        for item in output:
-            if (item.value == None):
-                finished = False
+        output = self.get_output()
+
+        if (self.get_output().value == None):
+            finished = False
+        else:
+            output.set_error(self.get_error_output(target, output.value))
 
         if (not finished and layer < self.depth):
             layer += 1
-            return self.forward_propagation(act_func, layer, instance)
+            return self.forward_propagation_phase(act_func, layer, data, target)
         else:
-            return output[0].value
-    
+            oi = self.get_oi(target, output.value) ** 2
+            return oi
+
+    def backward_propagation_phase(self, update, k):
+        print(k)
+        for i in range(self.depth-1, 0, -1):
+            edges = self.get_edges_from_to(i)
+
+            for edge in edges:
+                if (i == 1):
+                    delta = edge.value * self.learn_rate * edge.succ.error
+                else:
+                    delta = edge.pred.value * self.learn_rate * edge.succ.error
+
+                edge.set_delta(delta)
+
+                if (i > 1):
+                    err = edge.pred.value * (1 - edge.pred.value) * edge.succ.error * edge.value
+                    edge.pred.set_error(err)
+
+                if (update):
+                    print("update")
+                    print(edge.pred.label, edge.succ.label, edge.value, edge.delta)
+                    # harusnya ini tu update weight dari edge nya tu jumlah dari tiap instance dalam tiap update dan tiap instance beda2
+                    # edge.set_value(edge.value + k * edge.delta) harusnya ini tu update weight dari edge nya tu jumlah dari tiap instance dalam tiap update dan tiap instance beda2
+                    print(edge.pred.label, edge.succ.label, edge.value)
+        
+
+    def mbgd(self):
+        epoch = 1
+        counter = 0
+        i = 0  # how much time delta added to next weight
+        update = False
+        total_err = 0
+
+        data = self.data["data"]
+        targets = self.data["target"]
+
+        while (self.error >= self.err_treshold and (epoch <= self.max_iter)):
+            for datum, target in zip(data, targets):
+                print(datum, target)
+                counter += 1
+                if (counter % self.batch_size == 0 or counter % len(data) == 0):
+                    update = True
+                    i += 1
+
+                if (counter % len(data) == 0):
+                    epoch += 1
+
+                print(counter, update, epoch, i)
+
+                err = self.forward_propagation_phase(
+                    self.act_func, 1, datum, target)
+                total_err += err
+
+                self.backward_propagation_phase(update, sum)
+
+                if (update):
+                    update = False
+                    i = 0
+                    self.set_error(total_err)
+                    total_err = 0
+                
+                # print(self.error)
+
+
     def forward_propagation_many(self, instances, act_func):
         outputs = []
         data = instances["data"]
-        for instance in data:
-            output = self.forward_propagation(act_func, 1, instance)
-            self.reset_graph()
+        target = instances["target"]
+
+        for i in range(len(data)):
+            output = self.forward_propagation_phase(
+                act_func, 1, data[i], target[i])
+
             outputs.append(output)
 
-        target = instances["target"]
-        oi_list = []
-        error_outputs = []
-        for out, tar in zip(outputs, target):
-            print(out, tar)
-            oi = self.get_oi(tar, out)
-            oi_list.append(oi)
-
-            err = self.get_error_output(tar, out)
-            error_outputs.append(err)
-
-        return outputs, oi_list, error_outputs
-
+        return outputs
     ########## ReLU & Linear ##########
 
     def print_function(self, vertex):
@@ -448,8 +540,6 @@ class Graph:
             predictions.append(result)
 
         return predictions
-    
-
 
     def visualize_graph(self):
         G = nx.Graph()

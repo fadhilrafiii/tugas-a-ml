@@ -1,25 +1,25 @@
-from mbgd import Vertex, Edge, Graph
+from Graph import Graph, Vertex, Edge
 from sklearn import datasets
 
-data = datasets.load_iris()
-input_data = data["data"][0]
-print(input_data)
+# data = datasets.load_iris()
+# input_data = data["data"][0]
+data = {"data": [[1,1], [1,-1], [-1,1], [-1,-1]], "target": [1,-1,-1, 1]}
+
+# print(input_data)
 depth = 3
 num_of_neuron = [2, 2, 1]
-learning_rate = 0.01
+learning_rate = 0.1
 act_func = ["sigmoid", "sigmoid", "sigmoid"]
+max_iter = 10
+batch_size = 4
+err_treshold = 0.01
 
 
-F = Graph([], [], depth, num_of_neuron, learning_rate, act_func)
+
+F = Graph([], [], depth, num_of_neuron, learning_rate, act_func, err_treshold, max_iter, batch_size, data)
 F.create_graph([None for i in range(num_of_neuron[0])], 0.5)
-# F.predict_ff()
-instances = {"data": [[1,1], [1,-1], [-1,1], [-1,-1]], "target": [1,-1,-1, 1]}
-# print(F.forward_propagation(act_func,1, instances[3]))
-out, oi, err = F.forward_propagation_many(instances, act_func)
+F.mbgd()
+# print(F.forward_propagation_phase(act_func, 1, [1,1], 1))
+# # F.backward_propagation_phase(False, 0)
+# # F.print_all_vertices
 
-print(out)
-print(oi)
-print(err)
-# F.visualize_graph()
-
-# vertex = Vertex("h1")
