@@ -181,6 +181,9 @@ class Graph:
             return output
         
 
+    def get_error_output_linear(self, target, output):
+        return self.get_oi(target, output)
+
     ############# SET ###############
     def set_error(self, error):
         self.error = error
@@ -337,6 +340,8 @@ class Graph:
                     value = self.relu(value)
                 elif activation == "softmax":
                     value = self.softmax(value)
+                elif(activation == "linear"):
+                    value = self.linear(vertex)
 
                 vertex.set_value(value)
 
@@ -353,6 +358,9 @@ class Graph:
             elif activation == "softmax":
                 output.set_error(self.get_error_output_softmax(target, output))
             
+            elif(activation=="linear"):
+                output.set_error(self.get_error_output_linear(target, output.value))
+
 
         if (not finished and layer < self.depth):
             layer += 1
@@ -363,7 +371,7 @@ class Graph:
 
     def backward_propagation_phase(self, update, act_func):
         for i in range(self.depth-1, 0, -1):
-            print(i)
+            # print(i)
             activation = act_func[i]
             edges = self.get_edges_from_to(i)
 
@@ -375,7 +383,7 @@ class Graph:
                 if (i > 1):
                     if (activation == "sigmoid"):
                         err = edge.pred.value * (1 - edge.pred.value) * edge.succ.error * edge.value
-                    elif(activation == "relu"):
+                    elif(activation == "relu" or activation=="linear"):
                         if(edge.pred.value>=0):
                             err = edge.succ.error * edge.value
                         else:
@@ -402,6 +410,7 @@ class Graph:
         targets = self.data["target"]
 
         while ((self.error >= self.err_treshold) and (epoch <= self.max_iter)):
+            print("Epoch" + str(epoch))
             for datum, target in zip(data, targets):
                 counter += 1
                 num_instance += 1
@@ -500,7 +509,7 @@ class Graph:
         edge = self.get_vertices_at(2)
         for e in range(len(edge)):
             if(e != 0):
-                print(e)
+                # print(e)
                 self.relu(edge[e])
 
         y = self.get_vertices_at(3)[0]
