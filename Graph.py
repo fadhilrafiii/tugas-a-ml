@@ -173,6 +173,13 @@ class Graph:
             return 0
         else:
             return self.get_oi(target, output)
+        
+    def get_error_output_softmax(self, target, output):
+        if target == 0:
+            return -1 * (1-output)
+        else:
+            return output
+        
 
     ############# SET ###############
     def set_error(self, error):
@@ -304,7 +311,7 @@ class Graph:
             return value
         else:
             return 0
-
+    
 
     def forward_propagation_phase(self, act_func, layer, data, target):
         inputs = self.get_vertices_at(1)
@@ -328,6 +335,8 @@ class Graph:
                     value = self.sigmoid(value)
                 elif(activation == "relu"):
                     value = self.relu(value)
+                elif activation == "softmax":
+                    value = self.softmax(value)
 
                 vertex.set_value(value)
 
@@ -341,6 +350,9 @@ class Graph:
                 output.set_error(self.get_error_output_sigmoid(target, output.value))
             elif(activation == "relu"):
                 output.set_error(self.get_error_output_relu(target, output.value))
+            elif activation == "softmax":
+                output.set_error(self.get_error_output_softmax(target, output))
+            
 
         if (not finished and layer < self.depth):
             layer += 1
@@ -368,6 +380,8 @@ class Graph:
                             err = edge.succ.error * edge.value
                         else:
                             err = 0
+                    elif activation == "softmax":
+                        err = edge.pred.value * (1- edge.pred.value) * edge.succ.error * edge.value
                     edge.pred.set_error(err)
 
                 if (update):
@@ -535,7 +549,7 @@ class Graph:
         # print("Softmax(",vertex.label,") = ", prediction)
 
         return prediction
-
+    
     def predict_softmax(self, instance):
         predictions = []
         predict = 0
