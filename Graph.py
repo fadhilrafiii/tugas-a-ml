@@ -165,8 +165,14 @@ class Graph:
     def get_oi(self, target, output):
         return target - output
 
-    def get_error_output(self, target, output):
+    def get_error_output_sigmoid(self, target, output):
         return output * (1 - output) * self.get_oi(target, output)
+
+    def get_error_output_relu(self, target, output):
+        if(output<0):
+            return 0
+        else:
+            return self.get_oi(target, output)
 
     ############# SET ###############
     def set_error(self, error):
@@ -293,6 +299,12 @@ class Graph:
     def sigmoid(self, value):
         return 1/(1 + exp(-1*value))
 
+    def relu(self, value):
+        if(value>=0): 
+            return value
+        else:
+            return 0
+
 
     def forward_propagation_phase(self, act_func, layer, data, target):
         inputs = self.get_vertices_at(1)
@@ -314,6 +326,8 @@ class Graph:
 
                 if (activation == "sigmoid"):
                     value = self.sigmoid(value)
+                elif(activation == "relu"):
+                    value = self.relu(value)
 
                 vertex.set_value(value)
 
@@ -323,7 +337,10 @@ class Graph:
             finished = False
         else:
             output = self.get_output()
-            output.set_error(self.get_error_output(target, output.value))
+            if (activation == "sigmoid"):
+                output.set_error(self.get_error_output_sigmoid(target, output.value))
+            elif(activation == "relu"):
+                output.set_error(self.get_error_output_relu(target, output.value))
 
         if (not finished and layer < self.depth):
             layer += 1
@@ -332,9 +349,10 @@ class Graph:
             oi = self.get_oi(target, output.value) ** 2 
             return oi
 
-    def backward_propagation_phase(self, update):
+    def backward_propagation_phase(self, update, act_func):
         for i in range(self.depth-1, 0, -1):
             print(i)
+            activation = act_func[i]
             edges = self.get_edges_from_to(i)
 
             for edge in edges:
@@ -343,7 +361,13 @@ class Graph:
                 edge.set_total_delta(edge.total_delta + delta)
 
                 if (i > 1):
-                    err = edge.pred.value * (1 - edge.pred.value) * edge.succ.error * edge.value
+                    if (activation == "sigmoid"):
+                        err = edge.pred.value * (1 - edge.pred.value) * edge.succ.error * edge.value
+                    elif(activation == "relu"):
+                        if(edge.pred.value>=0):
+                            err = edge.succ.error * edge.value
+                        else:
+                            err = 0
                     edge.pred.set_error(err)
 
                 if (update):
@@ -379,7 +403,7 @@ class Graph:
 
                 err = self.forward_propagation_phase(self.act_func, 1, datum, target)
                 total_err += err
-                self.backward_propagation_phase(update)
+                self.backward_propagation_phase(update, self.act_func)
 
                 if (update):
                     update = False
@@ -436,16 +460,16 @@ class Graph:
 
         return result
 
-    def relu(self, vertex):
-        value = self.count_function(vertex)
-        print("RelU(" + str(value)+") = ", end="")
-        if(value >= 0):
-            vertex.set_value(value)
+    # def relu(self, vertex):
+    #     value = self.count_function(vertex)
+    #     print("RelU(" + str(value)+") = ", end="")
+    #     if(value >= 0):
+    #         vertex.set_value(value)
 
-            print(value)
-        else:
-            vertex.set_value(0)
-            print(0)
+    #         print(value)
+    #     else:
+    #         vertex.set_value(0)
+    #         print(0)
 
     def linear(self, vertex):
 
