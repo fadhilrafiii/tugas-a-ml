@@ -1,36 +1,53 @@
 from Graph import Graph, Vertex, Edge
 from sklearn import datasets
+from sklearn.neural_network import MLPClassifier
 
-# data = datasets.load_iris()
-# input_data = data["data"][0]
-data = {"data": [[1,1], [1,-1], [-1,1], [-1,-1]], "target": [1,-1,-1, 1]}
+def accuration(y_true, y_predict):
+    if (len(y_true) != len(y_predict)):
+        print("actual list and prediction list don't have the same length!")
+        return
+    else:
+        total = len(y_predict)
+        count_true = 0
+        for actual, predict in zip(y_true, y_predict):
+            if (actual == predict):
+                count_true += 1
+        
+        return count_true/total
 
-# print(input_data)
-depth = 3
-num_of_neuron = [2, 2, 1]
-learning_rate = 0.1
-act_func = ["sigmoid", "sigmoid", "sigmoid"]
-max_iter = 11
-batch_size = 4
-err_treshold = 0.01
+def recall(tp, fn):
+    if (tp == 0):
+        return 0
+    return tp/(tp + fn)
 
+def precision(tp, fp):
+    if (tp == 0):
+        return 0
+    return tp/(tp + fp)
 
+def f1(precision, recall):
+    if (precision == 0 && recall == 0):
+        return 0
+    return 2 * (precision * recall) / (precision + recall)
 
-F = Graph([], [], depth, num_of_neuron, learning_rate, act_func, err_treshold, max_iter, batch_size, data)
-F.create_graph([None for i in range(num_of_neuron[0])], 0.5)
-F.mbgd()
-print(F.error)
-# F.forward_propagation_phase(act_func, 1, [1,1], 1)
-# F.forward_propagation_phase(act_func, 1, [1,-1], -1)
-
-# F.forward_propagation_phase(act_func, 1, [-1,1], -1)
-# F.forward_propagation_phase(act_func, 1, [-1,-1], 1)
-
-# for datum, target in zip(data["data"], data["target"]):
-# print(F.forward_propagation_phase(act_func, 1, [1,-1], -1))
-# print(oi)
-#     F.backward_propagation_phase(False, 0)
-# F.print_graph()
-# # F.print_all_vertices
-# F.print_all_edges()
-
+def confusion_matrix(y_true, y_predict, true_class):
+    if (len(y_true) != len(y_predict)):
+        print("actual list and prediction list don't have the same length!")
+        return
+    else:
+        # [tp, fn, fp, tn]
+        matrix = [0, 0, 0, 0]
+        for actual, predict in zip(y_true, y_predict):
+            print(actual, predict)
+            if (actual == predict):
+                if (predict == true_class):
+                    matrix[0] += 1
+                else:
+                    matrix[3] += 1
+            else:
+                if (predict == true_class):
+                    matrix[2] += 1
+                else:
+                    matrix[1] += 1
+    
+         return matrix
