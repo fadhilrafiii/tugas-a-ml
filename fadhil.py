@@ -26,7 +26,7 @@ def precision(tp, fp):
     return tp/(tp + fp)
 
 def f1(precision, recall):
-    if (precision == 0 && recall == 0):
+    if (precision == 0 and recall == 0):
         return 0
     return 2 * (precision * recall) / (precision + recall)
 
@@ -50,4 +50,4 @@ def confusion_matrix(y_true, y_predict, true_class):
                 else:
                     matrix[1] += 1
     
-         return matrix
+        return matrix
